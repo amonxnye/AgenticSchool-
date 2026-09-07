@@ -1,0 +1,9 @@
+# Firebase App Hosting configuration.
+# Create the secret once: firebase apphosting:secrets:set anthropic-api-key
+env:
+  - variable: MODEL_PROVIDER
+    value: anthropic
+  - variable: ANTHROPIC_MODEL
+    value: claude-opus-5
+  - variable: ANTHROPIC_API_KEY
+    secret: anthropic-api-key
