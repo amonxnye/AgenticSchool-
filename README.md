@@ -37,8 +37,9 @@ npm run typecheck && npm run lint && npm run build
 ### Deploying on Firebase App Hosting
 
 `apphosting.yaml` lists the one-time setup: link a web app to the backend, enable Firestore and Google sign-in,
-create the `settings-encryption-key` secret, and set `ADMIN_EMAILS`. Model provider keys are not deployment
-config: an admin enters them at `/admin/settings`, where they are stored encrypted.
+set `ADMIN_EMAILS`, then create the `settings-encryption-key` secret and uncomment its block. A rollout fails if
+the file references a secret that does not exist yet, which is why the block ships commented out. Model provider
+keys are not deployment config: an admin enters them at `/admin/settings`, where they are stored encrypted.
 
 ### Model providers
 
