@@ -20,3 +20,29 @@ The public promise:
 | [Master Software Requirements Specification v2](docs/Agentic_School_Master_SRS_v2.md) | Full platform requirements, from positioning to MVP scope and architecture |
 
 Operated internationally by FMG.
+
+## Running the platform
+
+The app is a Next.js project (TypeScript, Tailwind) with a thin model gateway so the AI provider stays swappable.
+
+```bash
+npm install
+cp .env.example .env.local   # add ANTHROPIC_API_KEY, or set MODEL_PROVIDER=mock
+npm run dev                  # http://localhost:3000
+npm test                     # unit tests
+npm run typecheck && npm run lint && npm run build
+```
+
+### How a class works
+
+A lesson is a script of beats written by a human expert in `src/content/sessions/`. The teaching agents run the script; they do not invent the curriculum.
+
+| Beat | Who leads | What happens |
+| --- | --- | --- |
+| Explain | Maya, AI Instructor | Teaches the expert's points, with examples from the learner's profession |
+| Watch | The human expert | A short recorded clip |
+| Check | Maya | Asks the expert's questions one at a time and gives feedback |
+| Do | Atlas, Lab Coach | Reviews the learner's lab submission against the expert's criteria |
+| Apply | Project Coach | Responds to the learner's reflection and links it to the Session project |
+
+The runtime lives in `src/components/LessonRuntime.tsx`; the agent prompts are built in `src/lib/prompts.ts`; the gateway is `src/lib/gateway.ts`.
