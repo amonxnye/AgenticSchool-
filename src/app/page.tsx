@@ -6,7 +6,12 @@ export default function Home() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-12 px-6 py-24">
       <header className="flex flex-col gap-4">
-        <div className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Agentic School</div>
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Agentic School</div>
+          <Link href="/login" className="text-sm underline">
+            Sign in
+          </Link>
+        </div>
         <h1 className="text-4xl font-semibold leading-tight">
           Learn AI.
           <br />
