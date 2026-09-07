@@ -23,15 +23,36 @@ Operated internationally by FMG.
 
 ## Running the platform
 
-The app is a Next.js project (TypeScript, Tailwind) with a thin model gateway so the AI provider stays swappable.
+The app is a Next.js project (TypeScript, Tailwind) on Firebase: Firebase Auth for sign-in, Firestore for learner
+progress, teaching-turn logs and admin settings, and a thin model gateway so the AI provider stays swappable.
 
 ```bash
 npm install
-cp .env.example .env.local   # add ANTHROPIC_API_KEY, or set MODEL_PROVIDER=mock
+cp .env.example .env.local   # fill in the Firebase values, ADMIN_EMAILS and SETTINGS_ENCRYPTION_KEY
 npm run dev                  # http://localhost:3000
 npm test                     # unit tests
 npm run typecheck && npm run lint && npm run build
 ```
+
+### Deploying on Firebase App Hosting
+
+`apphosting.yaml` lists the one-time setup: link a web app to the backend, enable Firestore and Google sign-in,
+create the `settings-encryption-key` secret, and set `ADMIN_EMAILS`. Model provider keys are not deployment
+config: an admin enters them at `/admin/settings`, where they are stored encrypted.
+
+### Model providers
+
+| Provider | Notes |
+| --- | --- |
+| RIPA platform (default) | OpenAI-compatible gateway at `api.ripaplatform.com`. No default model: pick one in the admin from the models the gateway has pulled. |
+| Anthropic | Streams from `claude-opus-5` with server-side refusal fallback. |
+| Mock | Runs the class with no model, for development. |
+
+### Admin
+
+`/admin` is open to `ADMIN_EMAILS` and anyone given the admin role. It has an overview (students, activity,
+lessons, teaching turns, model usage), a students list with per-learner progress and transcripts, the course
+catalogue with start and completion counts, and the model settings.
 
 ### How a class works
 

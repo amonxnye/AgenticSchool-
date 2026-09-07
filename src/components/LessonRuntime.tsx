@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AGENTS, BEAT_AGENT } from "@/content/agents";
 import type { LearnerProfile, Lesson, Session } from "@/content/types";
 import type { ChatMessage } from "@/lib/gateway";
@@ -10,8 +10,6 @@ import ProfileBar from "./ProfileBar";
 import TeachingTeam from "./TeachingTeam";
 import WatchBeat from "./WatchBeat";
 
-const DEFAULT_PROFILE: LearnerProfile = { profession: "", level: "some" };
-
 const PLACEHOLDER: Record<string, string> = {
   explain: "Ask a question about this…",
   check: "Type your answer…",
@@ -19,11 +17,40 @@ const PLACEHOLDER: Record<string, string> = {
   apply: "Write your reflection here…",
 };
 
-export default function LessonRuntime({ session, lesson }: { session: Session; lesson: Lesson }) {
-  const [profile, setProfile] = useState<LearnerProfile>(DEFAULT_PROFILE);
-  const [index, setIndex] = useState(0);
-  const [done, setDone] = useState<string[]>([]);
-  const [transcripts, setTranscripts] = useState<Record<string, ChatMessage[]>>({});
+export interface InitialState {
+  profile: LearnerProfile;
+  done: string[];
+  transcripts: Record<string, ChatMessage[]>;
+}
+
+export default function LessonRuntime({
+  session,
+  lesson,
+  initial,
+}: {
+  session: Session;
+  lesson: Lesson;
+  initial: InitialState;
+}) {
+  const [profile, setProfile] = useState<LearnerProfile>(initial.profile);
+  const [index, setIndex] = useState(() => Math.min(initial.done.length, lesson.beats.length - 1));
+  const [done, setDone] = useState<string[]>(initial.done);
+  const [transcripts, setTranscripts] = useState<Record<string, ChatMessage[]>>(initial.transcripts);
+  const dirty = useRef(false);
+
+  // Persist learner state shortly after it changes, so progress survives a reload.
+  useEffect(() => {
+    if (!dirty.current) return;
+    const timer = setTimeout(() => {
+      dirty.current = false;
+      void fetch("/api/progress", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ sessionId: session.id, lessonId: lesson.id, done, transcripts, profile }),
+      });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [done, transcripts, profile, session.id, lesson.id]);
 
   const beat = lesson.beats[index];
   const agent = AGENTS[BEAT_AGENT[beat.type]];
@@ -32,6 +59,7 @@ export default function LessonRuntime({ session, lesson }: { session: Session; l
   const canContinue = beat.type === "watch" || messages.some((m) => m.role === "assistant");
 
   function complete() {
+    dirty.current = true;
     setDone((d) => (d.includes(beat.id) ? d : [...d, beat.id]));
     if (!isLast) setIndex(index + 1);
   }
@@ -44,7 +72,13 @@ export default function LessonRuntime({ session, lesson }: { session: Session; l
 
       <main className="flex min-w-0 flex-col gap-5">
         <div className="text-xs text-zinc-500">{session.title}</div>
-        <ProfileBar profile={profile} onChange={setProfile} />
+        <ProfileBar
+          profile={profile}
+          onChange={(p) => {
+            dirty.current = true;
+            setProfile(p);
+          }}
+        />
         <h1 className="text-2xl font-semibold">{beat.title}</h1>
 
         {beat.type === "watch" ? (
@@ -60,7 +94,10 @@ export default function LessonRuntime({ session, lesson }: { session: Session; l
               autoStart={beat.type === "explain" || beat.type === "check"}
               placeholder={PLACEHOLDER[beat.type]}
               messages={messages}
-              onChange={(m) => setTranscripts((t) => ({ ...t, [beat.id]: m }))}
+              onChange={(m) => {
+                dirty.current = true;
+                setTranscripts((t) => ({ ...t, [beat.id]: m }));
+              }}
             />
           </>
         )}

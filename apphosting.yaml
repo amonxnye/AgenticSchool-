@@ -1,9 +1,19 @@
 # Firebase App Hosting configuration.
-# Create the secret once: firebase apphosting:secrets:set anthropic-api-key
+#
+# Before the first rollout:
+#   1. Link a Firebase web app to this backend so FIREBASE_WEBAPP_CONFIG is provided at build time.
+#   2. Enable Firestore (production mode) and Google sign-in in Firebase Authentication.
+#   3. Create the encryption secret and grant the backend access:
+#        openssl rand -base64 32 | firebase apphosting:secrets:set settings-encryption-key --data-file=-
+#   4. Set ADMIN_EMAILS to the addresses that may open /admin.
+#
+# Model provider API keys are entered in /admin/settings and stored encrypted in Firestore.
 env:
-  - variable: MODEL_PROVIDER
-    value: anthropic
-  - variable: ANTHROPIC_MODEL
-    value: claude-opus-5
-  - variable: ANTHROPIC_API_KEY
-    secret: anthropic-api-key
+  - variable: SETTINGS_ENCRYPTION_KEY
+    secret: settings-encryption-key
+    availability:
+      - RUNTIME
+  - variable: ADMIN_EMAILS
+    value: "replace-with-your-email@example.com"
+    availability:
+      - RUNTIME
